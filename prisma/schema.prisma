@@ -1,0 +1,263 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["debian-openssl-1.1.x", "darwin"]
+}
+
+model OneTimeKey {
+  key               String   @id
+  signature         String
+  // author device
+  device            Device   @relation(fields: [deviceId], references: [id])
+  deviceId          String
+  claimedByDevice   Device?  @relation(name: "ClaimedDevice", fields: [claimedByDeviceId], references: [id])
+  claimedByDeviceId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Device {
+  id                   String               @id @default(uuid())
+  idKey                String               @unique
+  signingKey           String               @unique
+  // Things we want to know:
+  // 1. is the idKey valid
+  // 2. which user signing key was used? (later multiple should be supported)
+  // 3. which version was this?
+  // 4. whats the signature?
+  // example: JSON stringified object:
+  // {
+  // version: 1,
+  // message: `${userSigningKey} ${deviceSigningKey} ${deviceIdKey}`,
+  // signature: "qwe",
+  // }
+  signatures           String[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  user                 User                 @relation(fields: [userId], references: [id])
+  userId               String
+  content              Content[]
+  oneTimeKeys          OneTimeKey[]
+  claimedOneTimeKeys   OneTimeKey[]         @relation(name: "ClaimedDevice")
+  privateInfoContent   PrivateInfoContent[]
+  fallbackKey          String // a fallback key for OneTimeKeys
+  fallbackKeySignature String // signature of the fallback key signed by the device's signingKey
+}
+
+model DeviceTombstone {
+  id         String   @id
+  idKey      String   @unique
+  signingKey String   @unique
+  createdAt  DateTime @default(now())
+  userId     String
+}
+
+model User {
+  id                  String              @id @default(uuid())
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  signingKeys         String[]
+  devices             Device[]
+  repositories        Repository[]        @relation(references: [id])
+  contacts            Contact[]
+  contactsOf          Contact[]           @relation(name: "ContactUser")
+  createdRepositories Repository[]        @relation(name: "RepositoryCreator")
+  repositoryEvents    RepositoryEvents[]  @relation(references: [id])
+  contactInvitations  ContactInvitation[]
+  licenses            License[]
+}
+
+model UserTombstone {
+  id        String   @id
+  createdAt DateTime @default(now())
+}
+
+model PrivateInfoContent {
+  id                              String                           @id @default(uuid())
+  // author device
+  device                          Device                           @relation(fields: [deviceId], references: [id])
+  deviceId                        String
+  encryptedContent                String
+  createdAt                       DateTime                         @default(now())
+  privateInfoGroupSessionMessages PrivateInfoGroupSessionMessage[]
+}
+
+model PrivateInfoGroupSessionMessage {
+  id                   String              @id @default(uuid())
+  privateInfoContent   PrivateInfoContent? @relation(fields: [privateInfoContentId], references: [id])
+  privateInfoContentId String?
+  type                 Int
+  body                 String
+  targetDeviceIdKey    String
+}
+
+model Contact {
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String
+  signingKey        String
+  contactSigningKey String
+  contactUser       User     @relation(name: "ContactUser", fields: [contactUserId], references: [id])
+  contactUserId     String
+  // Things we want to know:
+  // 1. is the contact's userSigningKey valid
+  // 2. which user signing key (of mine) was used? (later multiple should be supported)
+  // 3. which version was this?
+  // 4. whats the signature?
+  // example: JSON stringified object:
+  // {
+  // version: 1,
+  // message: `${myUserSigningKey} ${contactUserSigningKey}`,
+  // signature: "qwe",
+  // }
+  signatures        String[]
+}
+
+enum ContactInvitationStatus {
+  PENDING
+  ACCEPTED // accepted by the other user
+  COMPLETED // both add each other as contact
+}
+
+model ContactInvitation {
+  id                 String                  @id @default(uuid())
+  user               User                    @relation(fields: [userId], references: [id])
+  userId             String
+  signingKey         String
+  serverSecret       String
+  acceptedByUserId   String?
+  contactInfoMessage String?
+  status             ContactInvitationStatus
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+}
+
+model AddDeviceVerification {
+  id                  String   @id @default(uuid())
+  deviceIdKey         String   @unique
+  verificationMessage String
+  // "legacy" is the default since some value is needed for the initial migration
+  serverSecret        String   @default("legacy")
+  createdAt           DateTime @default(now())
+}
+
+model Content {
+  id                   String                @id @default(uuid())
+  // author device
+  device               Device                @relation(fields: [deviceId], references: [id])
+  deviceId             String
+  encryptedContent     String
+  createdAt            DateTime              @default(now())
+  repository           Repository            @relation(fields: [repositoryId], references: [id])
+  repositoryId         String
+  groupSessionMessages GroupSessionMessage[]
+}
+
+// TODO also connect to the device?
+model GroupSessionMessage {
+  id                String  @id @default(uuid())
+  content           Content @relation(fields: [contentId], references: [id])
+  contentId         String
+  type              Int
+  body              String
+  targetDeviceIdKey String
+}
+
+model Repository {
+  id                           String    @id @default(uuid())
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+  content                      Content[]
+  creator                      User      @relation(name: "RepositoryCreator", fields: [creatorId], references: [id])
+  creatorId                    String
+  collaborators                User[]    @relation(references: [id])
+  // used to check if the client is on the latest state and therefor
+  // must always be applied in the same order or can be some kind of CRDT counter
+  // in the future
+  lastContentUpdateIntegrityId String
+}
+
+enum RepositoryEventType {
+  REMOVE_COLLABORATORS
+  DELETE
+}
+
+model RepositoryEvents {
+  id                    String              @id @default(uuid())
+  createdAt             DateTime            @default(now())
+  // since the repository can be delted, but the event exist as a tombstone not relationship is created and it's existance not checked
+  repositoryId          String
+  type                  RepositoryEventType
+  affectedCollaborators User[]              @relation(references: [id])
+}
+
+// -------------------
+// Billing
+// -------------------
+
+model License {
+  id               String         @id @default(uuid())
+  token            String         @unique
+  note             String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  billingAccount   BillingAccount @relation(fields: [billingAccountId], references: [id])
+  billingAccountId String
+  user             User?          @relation(fields: [userId], references: [id])
+  userId           String?
+}
+
+enum SubscriptionPlan {
+  PERSONAL_PRO
+  TEAM
+}
+
+enum PaddleSubscriptionStatus {
+  ACTIVE
+  TRAILING
+  PAST_DUE
+  PAUSED
+  DELETED
+}
+
+model BillingAccount {
+  id                              String                    @id @default(uuid())
+  email                           String
+  licenses                        License[]
+  subscriptionPlan                SubscriptionPlan
+  purchasedLicensesQuantity       Int
+  createdAt                       DateTime                  @default(now())
+  updatedAt                       DateTime                  @updatedAt
+  marketingConsent                Boolean
+  paddleUserId                    String
+  paddleSubscriptionId            String
+  paddleCheckoutId                String
+  paddleSubscriptionStatus        PaddleSubscriptionStatus
+  paddleCancellationEffectiveDate DateTime?
+  paddlePausedFrom                DateTime?
+  paddleUpdateUrl                 String
+  paddleCancelUrl                 String
+  billingAccountAuthTokens        BillingAccountAuthToken[]
+}
+
+model BillingAccountEmailToken {
+  emailToken     String   @id
+  emailTokenUsed Boolean  @default(false)
+  email          String
+  expiration     DateTime
+}
+
+model BillingAccountAuthToken {
+  token            String         @id
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  expiration       DateTime
+  billingAccount   BillingAccount @relation(fields: [billingAccountId], references: [id])
+  billingAccountId String
+}

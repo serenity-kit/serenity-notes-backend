@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["esnext", "dom"],
+    "strict": true,
+    "esModuleInterop": true,
+    "rootDir": ".",
+    "noEmit": true,
+    "typeRoots": ["node_modules/@types", "types"]
+  },
+  "include": ["types.d.ts", "."]
+}

@@ -6,7 +6,7 @@ export type SignedUtcMessage = {
   signature: string;
 };
 
-export type CustomContex = {
+export type CustomContext = {
   signedUtcMessage?: SignedUtcMessage;
   billingAccountAuthToken?: string;
   setCookie: (name: string, value: string, options: CookieOptions) => unknown;

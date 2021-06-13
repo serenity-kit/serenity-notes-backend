@@ -122,11 +122,15 @@ type Content {
   encryptedContent: String
   groupSessionMessage: GroupSessionMessage
   id: ID
+  schemaVersion: Int
+  schemaVersionSignature: String
 }
 
 input ContentInput {
   encryptedContent: String!
   groupSessionMessages: [GroupSessionMessageInput]
+  schemaVersion: Int
+  schemaVersionSignature: String
 }
 
 input CreateContactInvitationInput {
@@ -433,6 +437,8 @@ input UpdateRepositoryContentAndGroupSessionInput {
   encryptedContent: String!
   groupSessionMessages: [GroupSessionMessageInput]
   repositoryId: ID!
+  schemaVersion: Int
+  schemaVersionSignature: String
 }
 
 type UpdateRepositoryContentAndGroupSessionResult {
@@ -444,6 +450,8 @@ input UpdateRepositoryContentInput {
   encryptedContent: String!
   groupSessionMessageIds: [ID!]
   repositoryId: ID!
+  schemaVersion: Int
+  schemaVersionSignature: String
 }
 
 type UpdateRepositoryContentResult {

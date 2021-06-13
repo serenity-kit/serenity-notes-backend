@@ -148,15 +148,19 @@ model AddDeviceVerification {
 }
 
 model Content {
-  id                   String                @id @default(uuid())
+  id                     String                @id @default(uuid())
   // author device
-  device               Device                @relation(fields: [deviceId], references: [id])
-  deviceId             String
-  encryptedContent     String
-  createdAt            DateTime              @default(now())
-  repository           Repository            @relation(fields: [repositoryId], references: [id])
-  repositoryId         String
-  groupSessionMessages GroupSessionMessage[]
+  device                 Device                @relation(fields: [deviceId], references: [id])
+  deviceId               String
+  encryptedContent       String
+  createdAt              DateTime              @default(now())
+  repository             Repository            @relation(fields: [repositoryId], references: [id])
+  repositoryId           String
+  groupSessionMessages   GroupSessionMessage[]
+  // TODO remove old Content entries and make schemaVersion & schemaVersionSignature mandatory.
+  // First in the API then in the DB schema.
+  schemaVersion          Int?
+  schemaVersionSignature String?
 }
 
 // TODO also connect to the device?

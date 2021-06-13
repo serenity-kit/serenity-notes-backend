@@ -16,5 +16,7 @@ export const Content = objectType({
     });
     t.id("authorUserId");
     t.field("authorDevice", { type: "Device" });
+    t.int("schemaVersion", { nullable: true });
+    t.string("schemaVersionSignature", { nullable: true });
   },
 });

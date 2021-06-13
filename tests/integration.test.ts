@@ -33,6 +33,7 @@ import {
   createAuthenticationTokenUser2DeviceA,
   verifyDevice,
   verifyContact,
+  verifySchemaVersion,
   generateSigningPrivateKey,
   updateYDocWithPrivateInfoContentEntries,
   nexusStartupSleep,
@@ -100,6 +101,8 @@ query repositoryQuery($id: ID!) {
           signingKey
           signatures
         }
+        schemaVersion
+        schemaVersionSignature
       }
     }
     ... on RepositoryTombstone {
@@ -130,6 +133,8 @@ query repositoriesQuery {
           signingKey
           signatures
         }
+        schemaVersion
+        schemaVersionSignature
       }
     }
     ... on RepositoryTombstone {
@@ -250,12 +255,13 @@ it("create a repository", async () => {
   const encodedYStateA = toBase64(yStateA);
 
   groupSessionA = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    createUserA.createUser.user.devices,
-    groupSessionA
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      createUserA.createUser.user.devices,
+      groupSessionA
+    );
 
   const encryptedContent = createRepositoryUpdate(
     groupSessionA,
@@ -286,6 +292,8 @@ it("create a repository", async () => {
         content: {
           encryptedContent,
           groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
         },
       },
     }
@@ -305,6 +313,15 @@ it("query the created repository", async () => {
     id: createRepositoryMutation.createRepository.repository.id,
     deviceIdKey: deviceAKeys.idKey,
   });
+
+  expect(
+    verifySchemaVersion(
+      deviceAKeys.signingKey,
+      repositoryQuery.repository.content[0].schemaVersion,
+      repositoryQuery.repository.content[0].schemaVersionSignature
+    )
+  ).toBe(true);
+
   const yDocAA = new Y.Doc();
   user1DeviceAInboundGroupSessions = updateYDocWithContentEntries(
     yDocAA,
@@ -343,6 +360,8 @@ it("update the repository", async () => {
         encryptedContent: encryptedContent3,
         groupSessionMessageIds:
           createRepositoryMutation.createRepository.groupSessionMessageIds,
+        schemaVersion: 1,
+        schemaVersionSignature: deviceA.sign("1"),
       },
     }
   );
@@ -357,6 +376,14 @@ it("query the updated repository", async () => {
     id: createRepositoryMutation.createRepository.repository.id,
     deviceIdKey: deviceAKeys.idKey,
   });
+
+  expect(
+    verifySchemaVersion(
+      deviceAKeys.signingKey,
+      repositoryQuery2.repository.content[0].schemaVersion,
+      repositoryQuery2.repository.content[0].schemaVersionSignature
+    )
+  ).toBe(true);
 
   const yDocAAA = new Y.Doc();
   user1DeviceAInboundGroupSessions = updateYDocWithContentEntries(
@@ -487,12 +514,13 @@ it("add new device B to my account", async () => {
 
 it("update the repository from device A for device A & B", async () => {
   const groupSession = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    [{ idKey: deviceAKeys.idKey }, { idKey: deviceBKeys.idKey }],
-    groupSession
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      [{ idKey: deviceAKeys.idKey }, { idKey: deviceBKeys.idKey }],
+      groupSession
+    );
 
   const yState = Y.encodeStateAsUpdate(yDocA);
   const yStateVector = toBase64(yState);
@@ -502,8 +530,9 @@ it("update the repository from device A for device A & B", async () => {
     yStateVector
   );
 
-  const updateRepositoryContentAndGroupSessionMutation: any = await clientA.request(
-    `
+  const updateRepositoryContentAndGroupSessionMutation: any =
+    await clientA.request(
+      `
       mutation updateRepositoryContentAndGroupSessionMutation($input: UpdateRepositoryContentAndGroupSessionInput!) {
         updateRepositoryContentAndGroupSession(input: $input) {
           content {
@@ -512,14 +541,16 @@ it("update the repository from device A for device A & B", async () => {
         }
       }
     `,
-    {
-      input: {
-        repositoryId: createRepositoryMutation.createRepository.repository.id,
-        encryptedContent: encryptedContent,
-        groupSessionMessages,
-      },
-    }
-  );
+      {
+        input: {
+          repositoryId: createRepositoryMutation.createRepository.repository.id,
+          encryptedContent: encryptedContent,
+          groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
+        },
+      }
+    );
 
   expect(
     updateRepositoryContentAndGroupSessionMutation
@@ -663,16 +694,17 @@ it("add a third device C to my account", async () => {
 
 it("update the repository from device A for device A, B & C", async () => {
   groupSessionA2 = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    [
-      { idKey: deviceAKeys.idKey },
-      { idKey: deviceBKeys.idKey },
-      { idKey: deviceCKeys.idKey },
-    ],
-    groupSessionA2
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      [
+        { idKey: deviceAKeys.idKey },
+        { idKey: deviceBKeys.idKey },
+        { idKey: deviceCKeys.idKey },
+      ],
+      groupSessionA2
+    );
 
   const yState = Y.encodeStateAsUpdate(yDocA);
   const yStateVector = toBase64(yState);
@@ -682,8 +714,9 @@ it("update the repository from device A for device A, B & C", async () => {
     yStateVector
   );
 
-  const updateRepositoryContentAndGroupSessionMutation: any = await clientA.request(
-    `
+  const updateRepositoryContentAndGroupSessionMutation: any =
+    await clientA.request(
+      `
       mutation updateRepositoryContentAndGroupSessionMutation($input: UpdateRepositoryContentAndGroupSessionInput!) {
         updateRepositoryContentAndGroupSession(input: $input) {
           content {
@@ -692,14 +725,16 @@ it("update the repository from device A for device A, B & C", async () => {
         }
       }
     `,
-    {
-      input: {
-        repositoryId: createRepositoryMutation.createRepository.repository.id,
-        encryptedContent: encryptedContent,
-        groupSessionMessages,
-      },
-    }
-  );
+      {
+        input: {
+          repositoryId: createRepositoryMutation.createRepository.repository.id,
+          encryptedContent: encryptedContent,
+          groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
+        },
+      }
+    );
 
   expect(
     updateRepositoryContentAndGroupSessionMutation
@@ -1108,8 +1143,9 @@ it("fetch devices for the other user, verify them and add to repo (user1 to user
     repositoryId: createRepositoryMutation.createRepository.repository.id,
     groupSessionMessages: [groupSessionMessage],
   };
-  const addCollaboratorToRepositoriesMutationResult: any = await clientA.request(
-    `mutation addCollaboratorToRepositories($input: AddCollaboratorToRepositoriesInput!) {
+  const addCollaboratorToRepositoriesMutationResult: any =
+    await clientA.request(
+      `mutation addCollaboratorToRepositories($input: AddCollaboratorToRepositoriesInput!) {
       addCollaboratorToRepositories(input: $input) {
         entries {
           repositoryId
@@ -1117,13 +1153,13 @@ it("fetch devices for the other user, verify them and add to repo (user1 to user
         }
       }
     }`,
-    {
-      input: {
-        repositoryGroupMessages,
-        contactId: contactsResult.contacts[0].id,
-      },
-    }
-  );
+      {
+        input: {
+          repositoryGroupMessages,
+          contactId: contactsResult.contacts[0].id,
+        },
+      }
+    );
   expect(
     addCollaboratorToRepositoriesMutationResult.addCollaboratorToRepositories
       .entries[0].repositoryId
@@ -1160,12 +1196,13 @@ it("update the repository with a new groupsession", async () => {
   const yStateVector = toBase64(yState);
 
   groupSessionA3 = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    createUserA.createUser.user.devices,
-    groupSessionA3
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      createUserA.createUser.user.devices,
+      groupSessionA3
+    );
 
   const encryptedContent = createRepositoryUpdate(
     groupSessionA3,
@@ -1173,8 +1210,9 @@ it("update the repository with a new groupsession", async () => {
     yStateVector
   );
 
-  const updateRepositoryContentAndGroupSessionMutation: any = await clientA.request(
-    `
+  const updateRepositoryContentAndGroupSessionMutation: any =
+    await clientA.request(
+      `
       mutation updateRepositoryContentAndGroupSessionMutation($input: UpdateRepositoryContentAndGroupSessionInput!) {
         updateRepositoryContentAndGroupSession(input: $input) {
           content {
@@ -1183,14 +1221,16 @@ it("update the repository with a new groupsession", async () => {
         }
       }
     `,
-    {
-      input: {
-        repositoryId: createRepositoryMutation.createRepository.repository.id,
-        encryptedContent: encryptedContent,
-        groupSessionMessages,
-      },
-    }
-  );
+      {
+        input: {
+          repositoryId: createRepositoryMutation.createRepository.repository.id,
+          encryptedContent: encryptedContent,
+          groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
+        },
+      }
+    );
 
   expect(
     updateRepositoryContentAndGroupSessionMutation

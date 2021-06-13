@@ -129,12 +129,13 @@ it("create a repository", async () => {
   const encodedYStateA = toBase64(yStateA);
 
   groupSessionA = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    createUserA.createUser.user.devices,
-    groupSessionA
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      createUserA.createUser.user.devices,
+      groupSessionA
+    );
 
   const encryptedContent = createRepositoryUpdate(
     groupSessionA,
@@ -165,6 +166,8 @@ it("create a repository", async () => {
         content: {
           encryptedContent,
           groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
         },
       },
     }
@@ -250,12 +253,13 @@ it("update the repository with a new groupsession fails from wrong user", async 
   const yStateVector = toBase64(yState);
 
   groupSessionA3 = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    user2ClientA,
-    user2DeviceA,
-    createUser2.createUser.user.devices,
-    groupSessionA3
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      user2ClientA,
+      user2DeviceA,
+      createUser2.createUser.user.devices,
+      groupSessionA3
+    );
 
   const encryptedContent = createRepositoryUpdate(
     groupSessionA3,
@@ -279,6 +283,8 @@ it("update the repository with a new groupsession fails from wrong user", async 
           repositoryId: createRepositoryMutation.createRepository.repository.id,
           encryptedContent: encryptedContent,
           groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: user2DeviceA.sign("1"),
         },
       }
     );
@@ -295,12 +301,13 @@ it("update the repository with a new groupsession", async () => {
   const yStateVector = toBase64(yState);
 
   groupSessionA3 = createGroupSession();
-  const groupSessionMessages = await claimOneTimeKeysAndCreateGroupSessionMessages(
-    clientA,
-    deviceA,
-    createUserA.createUser.user.devices,
-    groupSessionA3
-  );
+  const groupSessionMessages =
+    await claimOneTimeKeysAndCreateGroupSessionMessages(
+      clientA,
+      deviceA,
+      createUserA.createUser.user.devices,
+      groupSessionA3
+    );
 
   const encryptedContent = createRepositoryUpdate(
     groupSessionA3,
@@ -308,8 +315,9 @@ it("update the repository with a new groupsession", async () => {
     yStateVector
   );
 
-  const updateRepositoryContentAndGroupSessionMutation: any = await clientA.request(
-    `
+  const updateRepositoryContentAndGroupSessionMutation: any =
+    await clientA.request(
+      `
       mutation updateRepositoryContentAndGroupSessionMutation($input: UpdateRepositoryContentAndGroupSessionInput!) {
         updateRepositoryContentAndGroupSession(input: $input) {
           content {
@@ -318,14 +326,16 @@ it("update the repository with a new groupsession", async () => {
         }
       }
     `,
-    {
-      input: {
-        repositoryId: createRepositoryMutation.createRepository.repository.id,
-        encryptedContent: encryptedContent,
-        groupSessionMessages,
-      },
-    }
-  );
+      {
+        input: {
+          repositoryId: createRepositoryMutation.createRepository.repository.id,
+          encryptedContent: encryptedContent,
+          groupSessionMessages,
+          schemaVersion: 1,
+          schemaVersionSignature: deviceA.sign("1"),
+        },
+      }
+    );
 
   expect(
     updateRepositoryContentAndGroupSessionMutation
@@ -362,6 +372,8 @@ it("update the repository fails from wrong user", async () => {
           encryptedContent: encryptedContent3,
           groupSessionMessageIds:
             createRepositoryMutation.createRepository.groupSessionMessageIds,
+          schemaVersion: 1,
+          schemaVersionSignature: user2DeviceA.sign("1"),
         },
       }
     );
@@ -398,6 +410,8 @@ it("update the repository", async () => {
         encryptedContent: encryptedContent3,
         groupSessionMessageIds:
           createRepositoryMutation.createRepository.groupSessionMessageIds,
+        schemaVersion: 1,
+        schemaVersionSignature: deviceA.sign("1"),
       },
     }
   );

@@ -53,6 +53,8 @@ export interface NexusGenInputs {
   ContentInput: { // input type
     encryptedContent: string; // String!
     groupSessionMessages?: Array<NexusGenInputs['GroupSessionMessageInput'] | null> | null; // [GroupSessionMessageInput]
+    schemaVersion?: number | null; // Int
+    schemaVersionSignature?: string | null; // String
   }
   CreateContactInvitationInput: { // input type
     serverSecret: string; // String!
@@ -140,11 +142,15 @@ export interface NexusGenInputs {
     encryptedContent: string; // String!
     groupSessionMessages?: Array<NexusGenInputs['GroupSessionMessageInput'] | null> | null; // [GroupSessionMessageInput]
     repositoryId: string; // ID!
+    schemaVersion?: number | null; // Int
+    schemaVersionSignature?: string | null; // String
   }
   UpdateRepositoryContentInput: { // input type
     encryptedContent: string; // String!
     groupSessionMessageIds?: string[] | null; // [ID!]
     repositoryId: string; // ID!
+    schemaVersion?: number | null; // Int
+    schemaVersionSignature?: string | null; // String
   }
 }
 
@@ -219,6 +225,8 @@ export interface NexusGenObjects {
     encryptedContent?: string | null; // String
     groupSessionMessage?: NexusGenRootTypes['GroupSessionMessage'] | null; // GroupSessionMessage
     id?: string | null; // ID
+    schemaVersion?: number | null; // Int
+    schemaVersionSignature?: string | null; // String
   }
   CreateContactInvitationResult: { // root type
     contactInvitation?: NexusGenRootTypes['ContactInvitation'] | null; // ContactInvitation
@@ -415,6 +423,8 @@ export interface NexusGenFieldTypes {
     encryptedContent: string | null; // String
     groupSessionMessage: NexusGenRootTypes['GroupSessionMessage'] | null; // GroupSessionMessage
     id: string | null; // ID
+    schemaVersion: number | null; // Int
+    schemaVersionSignature: string | null; // String
   }
   CreateContactInvitationResult: { // field return type
     contactInvitation: NexusGenRootTypes['ContactInvitation'] | null; // ContactInvitation
@@ -646,6 +656,8 @@ export interface NexusGenFieldTypeNames {
     encryptedContent: 'String'
     groupSessionMessage: 'GroupSessionMessage'
     id: 'ID'
+    schemaVersion: 'Int'
+    schemaVersionSignature: 'String'
   }
   CreateContactInvitationResult: { // field return type name
     contactInvitation: 'ContactInvitation'

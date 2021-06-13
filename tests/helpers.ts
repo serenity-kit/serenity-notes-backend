@@ -236,9 +236,6 @@ export const signDevice = (
   deviceKeys: DevicePublicIdentityKeys,
   userSigningPrivateKey: string
 ) => {
-  deviceKeys.idKey;
-  deviceKeys.signingKey;
-
   const seed = fromBase64(userSigningPrivateKey);
   const signing = new Olm.PkSigning();
   signing.init_with_seed(seed);
@@ -285,6 +282,25 @@ export const verifyDevice = (
     );
     return true;
   } catch (err) {
+    return false;
+  }
+};
+
+export const verifySchemaVersion = (
+  deviceSigningKey: string,
+  schemaVersion: number,
+  signature: string
+) => {
+  const olmUtil = new Olm.Utility();
+  try {
+    olmUtil.ed25519_verify(
+      deviceSigningKey,
+      schemaVersion.toString(),
+      signature
+    );
+    return true;
+  } catch (err) {
+    console.error(err);
     return false;
   }
 };
@@ -415,9 +431,8 @@ export const createRepositoryUpdate = (
   };
 
   // create group message
-  const encryptedGroupMessage = outboundGroupSession.session.encrypt(
-    encodedYState
-  );
+  const encryptedGroupMessage =
+    outboundGroupSession.session.encrypt(encodedYState);
   const signature = currentDevice.sign(encryptedGroupMessage);
 
   const deviceIdKeys = JSON.parse(currentDevice.identity_keys());

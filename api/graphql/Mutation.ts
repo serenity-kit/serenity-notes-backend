@@ -72,6 +72,10 @@ export const ContentInput = inputObjectType({
       type: "GroupSessionMessageInput",
       required: false,
     });
+    // TODO eventually this should be mandatory
+    t.int("schemaVersion", { required: false });
+    // TODO eventually this should be mandatory
+    t.string("schemaVersionSignature", { required: false });
   },
 });
 
@@ -102,6 +106,10 @@ export const UpdateRepositoryContentInput = inputObjectType({
     t.id("repositoryId", { required: true });
     t.string("encryptedContent", { required: true });
     t.list.id("groupSessionMessageIds", { required: true });
+    // TODO eventually this should be mandatory
+    t.int("schemaVersion", { required: false });
+    // TODO eventually this should be mandatory
+    t.string("schemaVersionSignature", { required: false });
   },
 });
 
@@ -124,6 +132,10 @@ export const UpdateRepositoryContentAndGroupSessionInput = inputObjectType({
       type: "GroupSessionMessageInput",
       required: false,
     });
+    // TODO eventually this should be mandatory
+    t.int("schemaVersion", { required: false });
+    // TODO eventually this should be mandatory
+    t.string("schemaVersionSignature", { required: false });
   },
 });
 
@@ -609,10 +621,12 @@ export const Mutation = mutationType({
                 device: { connect: { id: device.id } },
                 encryptedContent: args.input.content.encryptedContent,
                 groupSessionMessages: {
-                  create: args.input.content.groupSessionMessages?.filter(
-                    notEmpty
-                  ),
+                  create:
+                    args.input.content.groupSessionMessages?.filter(notEmpty),
                 },
+                schemaVersion: args.input.content.schemaVersion,
+                schemaVersionSignature:
+                  args.input.content.schemaVersionSignature,
               },
             },
           },
@@ -625,9 +639,10 @@ export const Mutation = mutationType({
         return {
           repository,
           // there must be the one content entry that just has been created
-          groupSessionMessageIds: repository.content[0].groupSessionMessages.map(
-            (groupSessionMessage: any) => groupSessionMessage.id
-          ),
+          groupSessionMessageIds:
+            repository.content[0].groupSessionMessages.map(
+              (groupSessionMessage: any) => groupSessionMessage.id
+            ),
         };
       },
     });
@@ -676,6 +691,8 @@ export const Mutation = mutationType({
               // @ts-ignore
               connect: args.input.groupSessionMessageIds.map((id) => ({ id })),
             },
+            schemaVersion: args.input.schemaVersion,
+            schemaVersionSignature: args.input.schemaVersionSignature,
           },
         });
         const repositoryUpdatePromise = prisma.repository.update({
@@ -738,6 +755,8 @@ export const Mutation = mutationType({
             groupSessionMessages: {
               create: args.input.groupSessionMessages?.filter(notEmpty),
             },
+            schemaVersion: args.input.schemaVersion,
+            schemaVersionSignature: args.input.schemaVersionSignature,
           },
           include: { groupSessionMessages: true },
         });
@@ -794,9 +813,8 @@ export const Mutation = mutationType({
             device: { connect: { id: device.id } },
             encryptedContent: args.input.encryptedContent,
             privateInfoGroupSessionMessages: {
-              create: args.input.privateInfoGroupSessionMessages?.filter(
-                notEmpty
-              ),
+              create:
+                args.input.privateInfoGroupSessionMessages?.filter(notEmpty),
             },
           },
           include: { privateInfoGroupSessionMessages: true },
@@ -962,8 +980,9 @@ export const Mutation = mutationType({
       async resolve(root, args, ctx) {
         const currentDevice =
           // @ts-ignore
-          await (await getDeviceAndUserByAuthMessage(ctx.signedUtcMessage))
-            .device;
+          await (
+            await getDeviceAndUserByAuthMessage(ctx.signedUtcMessage)
+          ).device;
 
         const batchResult = await prisma.oneTimeKey.deleteMany({
           where: {
@@ -1422,9 +1441,10 @@ export const Mutation = mutationType({
             });
           }
         );
-        const deleteGroupSessionMessagePromise = prisma.groupSessionMessage.deleteMany(
-          { where: { contentId: { in: contentIds } } }
-        );
+        const deleteGroupSessionMessagePromise =
+          prisma.groupSessionMessage.deleteMany({
+            where: { contentId: { in: contentIds } },
+          });
         const deleteContentPromise = prisma.content.deleteMany({
           where: { repositoryId: { in: createdRepositoriesIds } },
         });
@@ -1438,16 +1458,15 @@ export const Mutation = mutationType({
           });
         });
 
-        const deleteContactInvitationsPromise = prisma.contactInvitation.deleteMany(
-          {
+        const deleteContactInvitationsPromise =
+          prisma.contactInvitation.deleteMany({
             where: {
               OR: [
                 { acceptedByUserId: currentUser.id },
                 { userId: currentUser.id },
               ],
             },
-          }
-        );
+          });
         const deleteContactsPromise = prisma.contact.deleteMany({
           where: {
             OR: [{ contactUserId: currentUser.id }, { userId: currentUser.id }],
@@ -1611,8 +1630,8 @@ export const Mutation = mutationType({
           const rawEmailToken = uuidv4();
           const expiration = new Date();
           expiration.setMinutes(expiration.getMinutes() + 15);
-          const billingAccountEmailToken = await prisma.billingAccountEmailToken.create(
-            {
+          const billingAccountEmailToken =
+            await prisma.billingAccountEmailToken.create({
               data: {
                 email: billingAcount.email,
                 // why sha256: https://security.stackexchange.com/a/151262
@@ -1623,8 +1642,7 @@ export const Mutation = mutationType({
 
                 expiration,
               },
-            }
-          );
+            });
           if (billingAccountEmailToken) {
             await sendBillingAccountAuthEmail(
               billingAccountEmailToken.email,
@@ -1652,9 +1670,10 @@ export const Mutation = mutationType({
           .createHash("sha256")
           .update(args.input.emailToken)
           .digest("base64");
-        const billingAccountEmailToken = await prisma.billingAccountEmailToken.findUnique(
-          { where: { emailToken } }
-        );
+        const billingAccountEmailToken =
+          await prisma.billingAccountEmailToken.findUnique({
+            where: { emailToken },
+          });
 
         // TODO test expiration check
         if (

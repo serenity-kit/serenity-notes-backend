@@ -10,6 +10,8 @@ import Olm from "olm";
 // only need to be done once in the whole app
 Olm.init();
 
+let olmUtility: Olm.Utility | undefined = undefined;
+
 const apollo = new ApolloServer({
   schema,
   context: ({ req, res }) => {
@@ -32,8 +34,10 @@ const apollo = new ApolloServer({
         const tenMinInMs = 600000;
         if (timeDifference > -tenMinInMs && timeDifference < tenMinInMs) {
           try {
-            const olmUtil = new Olm.Utility();
-            olmUtil.ed25519_verify(authValues[1], authValues[2], authValues[3]);
+            if (!olmUtility) {
+              olmUtility = new Olm.Utility();
+            }
+            olmUtility.ed25519_verify(authValues[1], authValues[2], authValues[3]);
             context.signedUtcMessage = {
               signingKey: authValues[1],
               utcMessage: authValues[2],

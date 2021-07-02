@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
-import { objectType, inputObjectType, mutationType, arg } from "@nexus/schema";
+import { objectType, inputObjectType, mutationType, arg } from "nexus";
 import { prisma } from "../../prisma/client";
 import { OneTimeKey } from "@prisma/client";
 import { getDeviceAndUserByAuthMessage } from "../utils";

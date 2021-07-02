@@ -1,4 +1,4 @@
-import { objectType, stringArg } from "@nexus/schema";
+import { objectType, stringArg } from "nexus";
 import { getDeviceAndUserByAuthMessage } from "../utils";
 
 export const Repository = objectType({

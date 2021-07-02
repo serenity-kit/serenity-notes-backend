@@ -5,7 +5,7 @@ import {
   arg,
   queryType,
   objectType,
-} from "@nexus/schema";
+} from "nexus";
 import { prisma } from "../../prisma/client";
 import { getDeviceAndUserByAuthMessage } from "../utils";
 import { getRepositoryContent } from "../helpers/repository";

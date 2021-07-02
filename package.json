@@ -19,7 +19,6 @@
     "deploy": "yarn build && heroku container:push web --app serenity-api && heroku container:release web --app serenity-api"
   },
   "dependencies": {
-    "@nexus/schema": "^0.19.2",
     "@prisma/client": "^2.26.0",
     "@sendgrid/mail": "^7.4.4",
     "apollo-server-express": "^2.24.1",
@@ -29,6 +28,7 @@
     "express-async-handler": "^1.1.4",
     "graphql": "^15.5.0",
     "make-promises-safe": "^5.1.0",
+    "nexus": "^1.1.0",
     "php-serialize": "^4.0.2"
   },
   "devDependencies": {

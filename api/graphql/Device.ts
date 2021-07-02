@@ -1,4 +1,4 @@
-import { objectType } from "@nexus/schema";
+import { objectType } from "nexus";
 import { prisma } from "../../prisma/client";
 import { getDeviceAndUserByAuthMessage } from "../utils";
 

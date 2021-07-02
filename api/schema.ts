@@ -1,4 +1,4 @@
-import { makeSchema, declarativeWrappingPlugin } from "@nexus/schema";
+import { makeSchema, declarativeWrappingPlugin } from "nexus";
 import path from "path";
 import { AddDeviceVerification } from "./graphql/AddDeviceVerification";
 import { Contact } from "./graphql/Contact";

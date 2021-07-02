@@ -1,4 +1,4 @@
-import { unionType } from "@nexus/schema";
+import { unionType } from "nexus";
 
 export const RepositoryResult = unionType({
   name: "RepositoryResult",

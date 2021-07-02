@@ -23,7 +23,7 @@ class PostgresTestEnvironment extends NodeEnvironment {
     this.global.process.env.POSTGRES_URL = this.connectionString;
 
     // Run the migrations to ensure our schema has the required structure
-    await exec(`${prismaBinary} migrate deploy --preview-feature`);
+    await exec(`${prismaBinary} migrate deploy`);
     // Regenerate client
     await exec(`${prismaBinary} generate`);
     return super.setup();

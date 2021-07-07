@@ -348,6 +348,7 @@ type Query {
   devicesForContact(contactId: ID!): [Device]
   devicesForContactInvitation(serverSecret: String!, userId: ID!, userSigningKey: String!): [Device]
   fetchAddDeviceVerification(deviceIdKey: String!, serverSecret: String!): AddDeviceVerification
+  latestMacClientVersion: String
   privateInfo: PrivateInfo
   repository(id: ID!): RepositoryResult @deprecated(reason: "Use `repositoryDevices` instead")
   repositoryDevices(groupSessionMessageIds: [ID!]!, repositoryId: ID!): RepositoryDevicesResult

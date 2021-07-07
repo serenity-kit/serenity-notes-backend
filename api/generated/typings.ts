@@ -547,6 +547,7 @@ export interface NexusGenFieldTypes {
     devicesForContact: Array<NexusGenRootTypes['Device'] | null> | null; // [Device]
     devicesForContactInvitation: Array<NexusGenRootTypes['Device'] | null> | null; // [Device]
     fetchAddDeviceVerification: NexusGenRootTypes['AddDeviceVerification'] | null; // AddDeviceVerification
+    latestMacClientVersion: string | null; // String
     privateInfo: NexusGenRootTypes['PrivateInfo'] | null; // PrivateInfo
     repository: NexusGenRootTypes['RepositoryResult'] | null; // RepositoryResult
     repositoryDevices: NexusGenRootTypes['RepositoryDevicesResult'] | null; // RepositoryDevicesResult
@@ -780,6 +781,7 @@ export interface NexusGenFieldTypeNames {
     devicesForContact: 'Device'
     devicesForContactInvitation: 'Device'
     fetchAddDeviceVerification: 'AddDeviceVerification'
+    latestMacClientVersion: 'String'
     privateInfo: 'PrivateInfo'
     repository: 'RepositoryResult'
     repositoryDevices: 'RepositoryDevicesResult'

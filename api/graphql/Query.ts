@@ -375,16 +375,15 @@ export const Query = queryType({
         serverSecret: stringArg({ required: true }),
       },
       async resolve(root, args, ctx) {
-        const addDeviceVerification = await prisma.addDeviceVerification.findMany(
-          {
+        const addDeviceVerification =
+          await prisma.addDeviceVerification.findMany({
             where: {
               deviceIdKey: args.deviceIdKey,
               serverSecret: args.serverSecret,
             },
             take: 1,
             orderBy: { createdAt: "desc" },
-          }
-        );
+          });
         if (addDeviceVerification.length !== 0) {
           return addDeviceVerification[0];
         }
@@ -508,6 +507,13 @@ export const Query = queryType({
           ...billingAccount,
           allLicenses: licenses,
         };
+      },
+    });
+
+    t.string("latestMacClientVersion", {
+      nullable: true,
+      resolve() {
+        return "0.2.0";
       },
     });
   },

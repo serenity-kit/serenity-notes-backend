@@ -513,7 +513,7 @@ export const Query = queryType({
     t.string("latestMacClientVersion", {
       nullable: true,
       resolve() {
-        return "0.2.0";
+        return "0.3.0";
       },
     });
   },

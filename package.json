@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest --runInBand",
     "clean": "rm -rf build",
-    "build": "yarn clean && yarn prisma:prod:generate && yarn ncc build ./api/app.ts -o build && cp node_modules/olm/olm.wasm build/olm.wasm && cp node_modules/prisma/query-engine-darwin build/query-engine-darwin",
+    "build": "yarn && yarn clean && yarn prisma:prod:generate && yarn ncc build ./api/app.ts -o build && cp node_modules/olm/olm.wasm build/olm.wasm && cp node_modules/prisma/query-engine-darwin build/query-engine-darwin",
     "start:prod": "PORT=$PORT PADDLE_PUBLIC_KEY=$PADDLE_PUBLIC_KEY POSTGRES_URL=$POSTGRES_URL NODE_ENV=production node ./build",
     "dev": "POSTGRES_URL=\"postgresql://prisma:prisma@localhost:5432/serenity\" yarn prisma generate && NODE_ENV=development POSTGRES_URL=\"postgresql://prisma:prisma@localhost:5432/serenity\" ts-node-dev --transpile-only ./api/app",
     "dev:test": "NODE_ENV=test ts-node-dev --transpile-only ./api/app",

@@ -7,7 +7,7 @@ import { getDeviceAndUserByAuthMessage } from "../utils";
 import getBillingAccountByAuthToken from "../utils/getBillingAccountByAuthToken";
 import sendBillingAccountAuthEmail from "../utils/sendBillingAccountAuthEmail";
 import { notEmpty } from "../utils/notEmpty";
-import { CustomContex } from "../types";
+import { CustomContext } from "../types";
 import { getDeleteDevicePromises } from "../helpers/device";
 import { assertIsCollaborator } from "../helpers/repository";
 
@@ -1664,7 +1664,7 @@ export const Mutation = mutationType({
           required: true,
         }),
       },
-      async resolve(root, args, ctx: CustomContex) {
+      async resolve(root, args, ctx: CustomContext) {
         // why sha256: https://security.stackexchange.com/a/151262
         const emailToken = crypto
           .createHash("sha256")
@@ -1729,7 +1729,7 @@ export const Mutation = mutationType({
     t.field("logoutBillingAccount", {
       type: "LogoutBillingAccountResult",
       nullable: true,
-      async resolve(root, args, ctx: CustomContex) {
+      async resolve(root, args, ctx: CustomContext) {
         const { billingAccountAuthToken } = await getBillingAccountByAuthToken(
           ctx.billingAccountAuthToken
         );

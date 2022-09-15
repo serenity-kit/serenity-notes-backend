@@ -3,7 +3,7 @@ import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { CustomContex } from "./types";
+import { CustomContext } from "./types";
 import { schema } from "./schema";
 import paddleWebhooksRouter from "./routes/paddle-webhooks";
 import Olm from "olm";
@@ -15,7 +15,7 @@ let olmUtility: Olm.Utility | undefined = undefined;
 const apollo = new ApolloServer({
   schema,
   context: ({ req, res }) => {
-    const context: CustomContex = {
+    const context: CustomContext = {
       setCookie: (name, value, options) => {
         res.cookie(name, value, options);
       },

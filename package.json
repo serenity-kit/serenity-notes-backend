@@ -61,5 +61,8 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "./tests/postgres-test-environment.js"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }
